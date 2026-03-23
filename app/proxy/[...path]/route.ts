@@ -48,6 +48,48 @@ const normalizeStremioType = (value: unknown): 'movie' | 'tv' | null => {
   return null;
 };
 
+const fetchAnimemappingJson = async (url: string) => {
+  return fetchTmdbJson(url); // Reuse the same simple fetch mechanism
+};
+
+const extractTmdbIdFromAnimemapping = (payload: any) => {
+  const candidates = [
+    payload?.mappings?.ids?.tmdb,
+    payload?.data?.mappings?.ids?.tmdb,
+  ];
+
+  for (const candidate of candidates) {
+    if (typeof candidate === 'number' && Number.isFinite(candidate)) {
+      return String(candidate);
+    }
+    if (typeof candidate === 'string') {
+      const match = candidate.match(/\d+/);
+      if (match) return match[0];
+    }
+  }
+
+  return null;
+};
+
+const resolveAnimeToTmdb = async (
+  provider: string,
+  externalId: string,
+) => {
+  const url = `https://animemapping.stremio.dpdns.org/${provider}/${encodeURIComponent(externalId)}`;
+  const data = await fetchAnimemappingJson(url);
+  if (!data) return null;
+  
+  const tmdbId = extractTmdbIdFromAnimemapping(data);
+  if (!tmdbId) return null;
+
+  // Most anime are series/tv, but movies should be handled too.
+  // The animemapping response usually contains subtype info.
+  const subtype = (data?.requested?.subtype || data?.subtype || data?.kitsu?.subtype || '').toLowerCase();
+  const type: 'movie' | 'tv' = (subtype === 'movie' || subtype === 'special') ? 'movie' : 'tv';
+
+  return { id: Number(tmdbId), type };
+};
+
 const resolveTmdbFromErdbId = async (
   erdbId: string,
   metaType: unknown,
@@ -99,6 +141,18 @@ const resolveTmdbFromErdbId = async (
     }
     if (tvResults[0]?.id) {
       return { id: Number(tvResults[0].id), type: 'tv' };
+    }
+  }
+
+  // Handle anime site IDs
+  const animePrefixes = ['kitsu', 'anilist', 'mal', 'myanimelist', 'anidb'];
+  for (const prefix of animePrefixes) {
+    if (erdbId.startsWith(`${prefix}:`)) {
+      const externalId = erdbId.split(':')[1];
+      if (externalId) {
+        const provider = prefix === 'myanimelist' ? 'mal' : prefix;
+        return resolveAnimeToTmdb(provider, externalId);
+      }
     }
   }
 
