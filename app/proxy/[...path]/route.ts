@@ -246,12 +246,6 @@ const translateMetaPayload = async (
   const details = await fetchTmdbJson(detailsUrl.toString());
   if (!details || typeof details !== 'object') return meta;
 
-  let translatedTitle =
-    typeof details.title === 'string'
-      ? details.title
-      : typeof details.name === 'string'
-        ? details.name
-        : null;
   let translatedOverview = typeof details.overview === 'string' ? details.overview : null;
 
   // Use season-specific metadata if available for anime seasons
@@ -265,16 +259,11 @@ const translateMetaPayload = async (
       if (seasonOverview) {
         translatedOverview = seasonOverview;
       }
-      const seasonName = typeof seasonDetails.name === 'string' ? seasonDetails.name : null;
-      // If the season name is more descriptive than just "Season X", use it.
-      if (seasonName && !seasonName.match(/^Season\s+\d+$/i)) {
-        translatedTitle = `${translatedTitle}: ${seasonName}`;
-      }
     }
   }
 
   const nextMeta: Record<string, unknown> = { ...meta };
-  translateTextFields(nextMeta, translatedTitle, translatedOverview);
+  translateTextFields(nextMeta, null, translatedOverview);
 
   if (tmdbRef.type === 'tv' && Array.isArray(nextMeta.videos) && nextMeta.videos.length > 0) {
     const videos = nextMeta.videos as Array<Record<string, unknown>>;
