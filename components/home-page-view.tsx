@@ -291,7 +291,7 @@ export function HomePageView({ refs, state, derived, actions }: HomePageViewProp
 
       <div className="relative">
         <nav ref={navRef} className="sticky top-0 z-50 border-b border-white/10 bg-[#06070b]/80 backdrop-blur-xl">
-          <div className="mx-auto flex w-full flex-col gap-3 px-4 py-3 sm:px-6 lg:flex-row lg:items-center lg:justify-between lg:gap-4">
+          <div className="mx-auto grid w-full grid-cols-1 gap-3 px-4 py-3 sm:px-6 lg:grid-cols-[auto_1fr_auto] lg:items-center lg:gap-4">
             <div className="flex items-center gap-3">
               <div className="w-9 h-9 rounded-xl bg-gradient-to-br from-orange-400 via-amber-400 to-red-500 flex items-center justify-center shadow-[0_8px_24px_rgba(249,115,22,0.35)]">
                 <Star className="w-5 h-5 text-white fill-white" />
@@ -301,13 +301,14 @@ export function HomePageView({ refs, state, derived, actions }: HomePageViewProp
                 <span className="block text-[10px] uppercase tracking-[0.3em] text-orange-300">Stateless</span>
               </div>
             </div>
-            <div className="flex w-full flex-col gap-2 lg:w-auto lg:items-end">
+            <div className="flex w-full flex-col gap-2 lg:items-center">
               <div className="flex flex-wrap items-center gap-1 text-[11px] font-semibold uppercase tracking-[0.16em] text-slate-400">
                 <a href="#preview" onClick={handleAnchorClick} className="px-3 py-2 rounded-full hover:text-white hover:bg-white/[0.04] transition-colors">Configurator</a>
                 <a href="#proxy" onClick={handleAnchorClick} className="px-3 py-2 rounded-full hover:text-white hover:bg-white/[0.04] transition-colors">Addon Proxy</a>
                 <a href="#docs" onClick={handleAnchorClick} className="px-3 py-2 rounded-full hover:text-white hover:bg-white/[0.04] transition-colors">API Docs</a>
               </div>
-              <div className="flex flex-wrap items-center gap-2">
+            </div>
+            <div className="flex flex-wrap items-center gap-2 lg:justify-center">
                 <div className={`rounded-full border px-3 py-2 text-[10px] normal-case tracking-normal ${githubPackageVersion && githubPackageVersion !== currentVersion ? 'border-red-500/40 bg-red-500/10 text-red-200' : 'border-white/10 bg-white/[0.04] text-slate-300'}`}>
                   Current Version: v{currentVersion}
                 </div>
@@ -322,7 +323,6 @@ export function HomePageView({ refs, state, derived, actions }: HomePageViewProp
                 >
                   GitHub
                 </a>
-              </div>
             </div>
           </div>
         </nav>
