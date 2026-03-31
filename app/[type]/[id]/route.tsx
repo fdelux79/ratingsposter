@@ -261,6 +261,20 @@ const streamBadgesInFlight = new Map<string, Promise<StreamBadgesResult>>();
 const mdbListRateLimitedUntil = new Map<string, number>();
 let mdbListApiKeyCursor = 0;
 const sha1Hex = (value: string) => createHash('sha1').update(value).digest('hex');
+const buildSecretCacheSeed = (name: string, value?: string | null) => {
+  const normalized = String(value || '').trim();
+  return normalized ? `${name}:${sha1Hex(normalized).slice(0, 12)}` : `${name}:none`;
+};
+const buildMdbListCacheSeed = (manualApiKey?: string | null) => {
+  const normalizedManual = String(manualApiKey || '').trim();
+  if (normalizedManual) {
+    return `mdblist:manual:${sha1Hex(normalizedManual).slice(0, 12)}`;
+  }
+  if (!MDBLIST_API_KEYS.length) {
+    return 'mdblist:none';
+  }
+  return `mdblist:pool:${sha1Hex(MDBLIST_API_KEYS.join('|')).slice(0, 12)}`;
+};
 const safeCompareText = (left: string, right: string) => {
   if (!left || !right || left.length !== right.length) {
     return false;
@@ -4777,6 +4791,8 @@ export async function GET(
     shouldApplyRatings || shouldApplyStreamBadges || (imageType === 'poster' && posterTextPreference === 'clean');
   const effectiveRatingPreferences = shouldApplyRatings ? Array.from(new Set<RatingPreference>(ratingPreferences)) : [];
   const selectedRatings = new Set<RatingPreference>(effectiveRatingPreferences);
+  const mdblistCacheSeed = buildMdbListCacheSeed(mdblistKey);
+  const simklCacheSeed = buildSecretCacheSeed('simkl', simklClientId);
   const renderSeedKey = [
     FINAL_IMAGE_RENDERER_CACHE_VERSION,
     imageType,
@@ -4795,6 +4811,8 @@ export async function GET(
     imageType === 'thumbnail' ? thumbnailSize : '-',
     ratingStyle,
     effectiveRatingPreferences.join(',') || 'none',
+    mdblistCacheSeed,
+    simklCacheSeed,
     streamBadgesCacheKeySeed,
     'v1', // Static version since we no longer have tokenConfigVersion
   ].join('|');
@@ -5292,6 +5310,8 @@ export async function GET(
         verticalBadgeContent,
         ratingStyle,
         effectiveRatingPreferences.join(',') || 'none',
+        mdblistCacheSeed,
+        simklCacheSeed,
         streamBadgesCacheKey,
         'v1',
       ].join('|');
